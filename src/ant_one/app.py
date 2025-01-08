@@ -60,7 +60,7 @@ class PimpScreen(toga.Box):
         # Layout elements
         title = toga.Label('Pimp my ant', style=Pack(padding=5, flex=1))
         self.pimp_canvas = self.generate_pimp_canvas()
-        self.draw_ant()
+        self.draw_ant(scale=1, translate=(100, 100), rotate=math.pi/2)
         
         # Layout assembly
         self.style.update(direction=COLUMN)
@@ -78,19 +78,39 @@ class PimpScreen(toga.Box):
     def on_press_canvas(self, widget, x, y):
         print(f'Canvas pressed @ {x} x {y}')
     
-    def draw_ant(self):
-        self.pimp_canvas.context.translate(200, 200)
-        self.pimp_canvas.context.rotate(0)
+    def draw_ant(self, scale=0.2, translate=(0, 0), rotate=0):
+        self.pimp_canvas.context.scale(scale, scale)
+        self.pimp_canvas.context.translate(*translate)
+        self.pimp_canvas.context.rotate(rotate)
 
         ant_color = '#393A3E'
+
+        def get_line_width(at_scale_1, scale):
+            return scale*at_scale_1
         
         # Draw body
+        head1_st = (0, -20)
+        head1_end = (0, 20)
+        head1_cp1 = (-30, -10)
+        head1_cp2 = (-30, 10)
+        head2_st = (0, -20)
+        head2_end = (0, 20)
+        head2_cp1 = (25, -25)
+        head2_cp2 = (25, 25)
         with self.pimp_canvas.context.Fill(color=ant_color) as fill:
-            ant_head = fill.ellipse(x=0, y=0, radiusx=20, radiusy=18)  # Head
-        # with self.pimp_canvas.context.Fill(color="black") as fill:
-            ant_body = fill.ellipse(x=45, y=0, radiusx=30, radiusy=10)  # Mesosoma / Thorax
-        # with self.pimp_canvas.context.Fill(color="black") as fill:
-            ant_tail = fill.ellipse(x=110, y=0, radiusx=40, radiusy=20)  # Metasoma / Abdomen
+            # Head
+            fill.move_to(*head1_st)
+            fill.bezier_curve_to(*head1_cp1, *head1_cp2, *head1_end)
+            fill.move_to(*head2_st)
+            fill.bezier_curve_to(*head2_cp1, *head2_cp2, *head2_end)
+            # Thorax
+            fill.move_to(45, 0)
+            fill.ellipse(x=45, y=0, radiusx=30, radiusy=12)
+            # Abdomen
+            fill.move_to(70, 0)
+            fill.quadratic_curve_to(95, -50, 140, 0)
+            fill.move_to(70, 0)
+            fill.quadratic_curve_to(95, 50, 140, 0)
         
         # Draw legs
         leg_points = {
@@ -98,9 +118,8 @@ class PimpScreen(toga.Box):
             'mid': [(45, 0), (50, 80), (50, 30)],
             'back': [(60, 0), (40, 60), (50, 20)]
         }
-        
-        with self.pimp_canvas.context.Stroke(0, 0, color=ant_color, line_width=5) as stroke, self.pimp_canvas.context.Fill(color=ant_color) as fill:
-            for leg in ['top', 'mid', 'back']:
+        with self.pimp_canvas.context.Stroke(0, 0, color=ant_color, line_width=get_line_width(5, scale)) as stroke, self.pimp_canvas.context.Fill(color=ant_color) as fill:
+            for leg in leg_points.keys():
                 for i, coords in enumerate(line_segments_gen(leg_points[leg])):
                     if i == 0:
                         stroke.move_to(*coords)
@@ -120,8 +139,7 @@ class PimpScreen(toga.Box):
         antenna_points = {
             '_': [(0, 0), (30, 90+45), (30, 160)]
         }
-        
-        with self.pimp_canvas.context.Stroke(0, 0, color=ant_color, line_width=2) as stroke:
+        with self.pimp_canvas.context.Stroke(0, 0, color=ant_color, line_width=get_line_width(2, scale)) as stroke:
             for i, coords in enumerate(line_segments_gen(antenna_points['_'])):
                 if i == 0:
                     stroke.move_to(*coords)
