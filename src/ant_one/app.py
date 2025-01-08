@@ -117,7 +117,23 @@ class PimpScreen(toga.Box):
                         fill.arc(*coords, radius=4)
 
         # Draw antennae
+        antenna_points = {
+            '_': [(0, 0), (30, 90+45), (30, 160)]
+        }
         
+        with self.pimp_canvas.context.Stroke(0, 0, color=ant_color, line_width=2) as stroke:
+            for i, coords in enumerate(line_segments_gen(antenna_points['_'])):
+                if i == 0:
+                    stroke.move_to(*coords)
+                else:
+                    stroke.line_to(*coords)
+                    fill.move_to(*coords)
+            for i, coords in enumerate(line_segments_gen(antenna_points['_'], x_mirror=True)):
+                if i == 0:
+                    stroke.move_to(*coords)
+                else:
+                    stroke.line_to(*coords)
+                    fill.move_to(*coords)
 
 
 class AntOne(toga.App):
