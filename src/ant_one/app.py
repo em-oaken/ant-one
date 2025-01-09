@@ -59,11 +59,12 @@ class PimpScreen(toga.Box):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.color_choices = ['#393A3E', '#28292D', '#B94F28', '#A54024']
+        self.color_choices = ['#393A3E', '#422E13', '#7F5F16', '#537636', '#878532', '#DBB95F']
+        self.ini_color = [0,0,0]
         self.ant_colouring = {
-            'antennae': self.color_choices[0],
-            'body': self.color_choices[0],
-            'legs': self.color_choices[0]
+            'antennae': self.color_choices[self.ini_color[0]],
+            'body': self.color_choices[self.ini_color[0]],
+            'legs': self.color_choices[self.ini_color[0]]
         }
 
         # Layout elements
@@ -99,7 +100,11 @@ class PimpScreen(toga.Box):
                             children=[
                                 toga.Label('Antennae', style=Pack(flex=1)),
                                 toga.Slider(
-                                    min=0, max=3, tick_count=4, value=0, style=Pack(flex=2),
+                                    min=0,
+                                    max=len(self.color_choices)-1,
+                                    tick_count=len(self.color_choices),
+                                    value=0,
+                                    style=Pack(flex=2),
                                     on_change=self.on_change_antennaecolor
                                     )
                             ]
@@ -109,7 +114,11 @@ class PimpScreen(toga.Box):
                             children=[
                                 toga.Label('Body', style=Pack(flex=1)),
                                 toga.Slider(
-                                    min=0, max=3, tick_count=4, value=0, style=Pack(flex=2),
+                                    min=0,
+                                    max=len(self.color_choices)-1,
+                                    tick_count=len(self.color_choices),
+                                    value=0,
+                                    style=Pack(flex=2),
                                     on_change=self.on_change_bodycolor
                                 )
                             ]
@@ -119,7 +128,11 @@ class PimpScreen(toga.Box):
                             children=[
                                 toga.Label('Legs', style=Pack(flex=1)),
                                 toga.Slider(
-                                    min=0, max=3, tick_count=4, value=0, style=Pack(flex=2),
+                                    min=0,
+                                    max=len(self.color_choices)-1,
+                                    tick_count=len(self.color_choices),
+                                    value=0,
+                                    style=Pack(flex=2),
                                     on_change=self.on_change_legscolor
                                 )
                             ]
@@ -259,6 +272,9 @@ class AntOne(toga.App):
         """
         # Apps parameters
         self.app_size = (640, 480)
+
+        # User settings
+        # self.paths.data
 
         # Screens
         self.playscreen = PlayScreen()
