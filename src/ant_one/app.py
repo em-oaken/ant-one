@@ -59,20 +59,23 @@ class PimpScreen(toga.Box):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.color_choices = ['#393A3E', '#28292D', '#B94F28', '#A54024']
+        self.ant_colouring = {
+            'antennae': self.color_choices[0],
+            'body': self.color_choices[0],
+            'legs': self.color_choices[0]
+        }
+
         # Layout elements
-        title_box = toga.Box(
-            children=[
-                toga.Label(
-                    'Pimp my ant',
-                    style=Pack(
-                        padding=(5, 20),
-                        flex=1,
-                        font_weight=BOLD,
-                        font_size=18,
-                        color='#393A3E',
-                    )
-                )
-            ]
+        self.top_title = toga.Label(
+            'Pimp my ant',
+            style=Pack(
+                padding=(5, 20),
+                flex=1,
+                font_weight=BOLD,
+                font_size=18,
+                color='#393A3E',
+            )
         )
         self.pimp_canvas = self.generate_pimp_canvas()
 
@@ -84,29 +87,41 @@ class PimpScreen(toga.Box):
                         toga.Box(
                             style=Pack(direction=ROW, padding=(40,0)),
                             children=[
-                                toga.Label('Name:', style=Pack(flex=1)),
-                                toga.TextInput(style=Pack(flex=2))
+                                toga.Label('Name', style=Pack(flex=1)),
+                                toga.TextInput(
+                                    style=Pack(flex=2),
+                                    on_change=self.on_change_name
+                                )
                             ],
                         ),
                         toga.Box(
                             style=Pack(direction=ROW),
                             children=[
                                 toga.Label('Antennae', style=Pack(flex=1)),
-                                toga.Slider(min=0, max=4, tick_count=5, style=Pack(flex=2))
+                                toga.Slider(
+                                    min=0, max=3, tick_count=4, value=0, style=Pack(flex=2),
+                                    on_change=self.on_change_antennaecolor
+                                    )
                             ]
                         ),
                         toga.Box(
                             style=Pack(direction=ROW),
                             children=[
                                 toga.Label('Body', style=Pack(flex=1)),
-                                toga.Slider(min=0, max=4, tick_count=5, style=Pack(flex=2))
+                                toga.Slider(
+                                    min=0, max=3, tick_count=4, value=0, style=Pack(flex=2),
+                                    on_change=self.on_change_bodycolor
+                                )
                             ]
                         ),
                         toga.Box(
                             style=Pack(direction=ROW),
                             children=[
                                 toga.Label('Legs', style=Pack(flex=1)),
-                                toga.Slider(min=0, max=4, tick_count=5, style=Pack(flex=2))
+                                toga.Slider(
+                                    min=0, max=3, tick_count=4, value=0, style=Pack(flex=2),
+                                    on_change=self.on_change_legscolor
+                                )
                             ]
                         )
                     ],
@@ -118,20 +133,35 @@ class PimpScreen(toga.Box):
         
         # Layout assembly
         self.style.update(direction=COLUMN)
-        self.add(title_box)
+        self.add(self.top_title)
         self.add(content_box)
 
 
-    def on_screen_opened(self):
+    def generate_ant_drawing(self):
         self.pimp_canvas_size = (
             self.pimp_canvas.layout.width,
             self.pimp_canvas.layout.height
         )
         self.draw_ant(
-            scale=1.2,
             translate=(self.pimp_canvas_size[0]/2, self.pimp_canvas_size[1]/2-60),
+            scale=1.2,
             rotate=math.pi/2
         )
+    
+    def on_change_name(self, widget):
+        self.top_title.text = f'Hi {widget.value}, how are you today?'
+    
+    def on_change_antennaecolor(self, widget):
+        self.ant_colouring['antennae'] = self.color_choices[int(widget.value)]
+        self.draw_ant(scale=1)
+    
+    def on_change_bodycolor(self, widget):
+        self.ant_colouring['body'] = self.color_choices[int(widget.value)]
+        self.draw_ant(scale=1)
+    
+    def on_change_legscolor(self, widget):
+        self.ant_colouring['legs'] = self.color_choices[int(widget.value)]
+        self.draw_ant(scale=1)
 
     def generate_pimp_canvas(self):
         """ Generates a background canvas."""     
@@ -144,39 +174,18 @@ class PimpScreen(toga.Box):
     def on_press_canvas(self, widget, x, y):
         print(f'Canvas pressed @ {x} x {y}')
     
-    def draw_ant(self, scale=0.2, translate=(0, 0), rotate=0):
+    def draw_ant(self, translate=(0, 0), scale=0.2, rotate=0):
+        """ Inserts the drawing of an ant on the canvas
+        translate: possibility to move the drawing
+        scale: scaling factor, <1 to reduce size
+        rotation: rotation in radians"""
+
         self.pimp_canvas.context.translate(*translate)
         self.pimp_canvas.context.scale(scale, scale)
         self.pimp_canvas.context.rotate(rotate)
 
-        ant_color = '#393A3E'
-
         def get_line_width(at_scale_1, scale):
             return scale*at_scale_1
-        
-        # Draw body
-        head1_st = (0, -20)
-        head1_end = (0, 20)
-        head1_cp1 = (-30, -10)
-        head1_cp2 = (-30, 10)
-        head2_st = (0, -20)
-        head2_end = (0, 20)
-        head2_cp1 = (25, -25)
-        head2_cp2 = (25, 25)
-        with self.pimp_canvas.context.Fill(color=ant_color) as fill:
-            # Head
-            fill.move_to(*head1_st)
-            fill.bezier_curve_to(*head1_cp1, *head1_cp2, *head1_end)
-            fill.move_to(*head2_st)
-            fill.bezier_curve_to(*head2_cp1, *head2_cp2, *head2_end)
-            # Thorax
-            fill.move_to(45, 0)
-            fill.ellipse(x=45, y=0, radiusx=30, radiusy=12)
-            # Abdomen
-            fill.move_to(70, 0)
-            fill.quadratic_curve_to(95, -50, 140, 0)
-            fill.move_to(70, 0)
-            fill.quadratic_curve_to(95, 50, 140, 0)
         
         # Draw legs
         leg_points = {
@@ -184,7 +193,7 @@ class PimpScreen(toga.Box):
             'mid': [(45, 0), (50, 80), (50, 30)],
             'back': [(60, 0), (40, 60), (50, 20)]
         }
-        with self.pimp_canvas.context.Stroke(0, 0, color=ant_color, line_width=get_line_width(5, scale)) as stroke, self.pimp_canvas.context.Fill(color=ant_color) as fill:
+        with self.pimp_canvas.context.Stroke(0, 0, color=self.ant_colouring['legs'], line_width=get_line_width(5, scale)) as stroke, self.pimp_canvas.context.Fill(color=self.ant_colouring['legs']) as fill:
             for leg in leg_points.keys():
                 for i, coords in enumerate(line_segments_gen(leg_points[leg])):
                     if i == 0:
@@ -205,7 +214,7 @@ class PimpScreen(toga.Box):
         antenna_points = {
             '_': [(0, 0), (30, 90+45), (30, 160)]
         }
-        with self.pimp_canvas.context.Stroke(0, 0, color=ant_color, line_width=get_line_width(2, scale)) as stroke:
+        with self.pimp_canvas.context.Stroke(0, 0, color=self.ant_colouring['antennae'], line_width=get_line_width(2, scale)) as stroke:
             for i, coords in enumerate(line_segments_gen(antenna_points['_'])):
                 if i == 0:
                     stroke.move_to(*coords)
@@ -218,6 +227,30 @@ class PimpScreen(toga.Box):
                 else:
                     stroke.line_to(*coords)
                     fill.move_to(*coords)
+
+        # Draw body
+        head1_st = (0, -20)
+        head1_end = (0, 20)
+        head1_cp1 = (-30, -10)
+        head1_cp2 = (-30, 10)
+        head2_st = (0, -20)
+        head2_end = (0, 20)
+        head2_cp1 = (25, -25)
+        head2_cp2 = (25, 25)
+        with self.pimp_canvas.context.Fill(color=self.ant_colouring['body']) as fill:
+            # Head
+            fill.move_to(*head1_st)
+            fill.bezier_curve_to(*head1_cp1, *head1_cp2, *head1_end)
+            fill.move_to(*head2_st)
+            fill.bezier_curve_to(*head2_cp1, *head2_cp2, *head2_end)
+            # Thorax
+            fill.move_to(45, 0)
+            fill.ellipse(x=45, y=0, radiusx=30, radiusy=12)
+            # Abdomen
+            fill.move_to(70, 0)
+            fill.quadratic_curve_to(95, -50, 140, 0)
+            fill.move_to(70, 0)
+            fill.quadratic_curve_to(95, 50, 140, 0)
 
 
 class AntOne(toga.App):
@@ -239,7 +272,7 @@ class AntOne(toga.App):
         )
         self.main_window.content = self.pimpscreen
         self.main_window.show()
-        self.pimpscreen.on_screen_opened()
+        self.pimpscreen.generate_ant_drawing()
     
 
 def main():
