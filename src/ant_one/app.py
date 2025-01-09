@@ -8,6 +8,8 @@ import toga
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
+from travertino.constants import BOLD
+
 
 def line_segments_gen(points, x_mirror=False):
     """Generator for points in the same continuous segmented line
@@ -58,19 +60,83 @@ class PimpScreen(toga.Box):
         super().__init__(*args, **kwargs)
 
         # Layout elements
-        title = toga.Label('Pimp my ant', style=Pack(padding=5, flex=1))
+        title_box = toga.Box(
+            children=[
+                toga.Label(
+                    'Pimp my ant',
+                    style=Pack(
+                        padding=(5, 20),
+                        flex=1,
+                        font_weight=BOLD,
+                        font_size=18,
+                        color='#393A3E',
+                    )
+                )
+            ]
+        )
         self.pimp_canvas = self.generate_pimp_canvas()
-        self.draw_ant(scale=1, translate=(100, 100), rotate=math.pi/2)
+
+        content_box = toga.Box(
+            children=[
+                self.pimp_canvas,
+                toga.Box(
+                    children=[
+                        toga.Box(
+                            style=Pack(direction=ROW, padding=(40,0)),
+                            children=[
+                                toga.Label('Name:', style=Pack(flex=1)),
+                                toga.TextInput(style=Pack(flex=2))
+                            ],
+                        ),
+                        toga.Box(
+                            style=Pack(direction=ROW),
+                            children=[
+                                toga.Label('Antennae', style=Pack(flex=1)),
+                                toga.Slider(min=0, max=4, tick_count=5, style=Pack(flex=2))
+                            ]
+                        ),
+                        toga.Box(
+                            style=Pack(direction=ROW),
+                            children=[
+                                toga.Label('Body', style=Pack(flex=1)),
+                                toga.Slider(min=0, max=4, tick_count=5, style=Pack(flex=2))
+                            ]
+                        ),
+                        toga.Box(
+                            style=Pack(direction=ROW),
+                            children=[
+                                toga.Label('Legs', style=Pack(flex=1)),
+                                toga.Slider(min=0, max=4, tick_count=5, style=Pack(flex=2))
+                            ]
+                        )
+                    ],
+                    style=Pack(flex=3, direction=COLUMN, padding=10)
+                )
+            ],
+            style=Pack(flex=1, direction=ROW)
+        )
         
         # Layout assembly
         self.style.update(direction=COLUMN)
-        self.add(title)
-        self.add(self.pimp_canvas)
+        self.add(title_box)
+        self.add(content_box)
+
+
+    def on_screen_opened(self):
+        self.pimp_canvas_size = (
+            self.pimp_canvas.layout.width,
+            self.pimp_canvas.layout.height
+        )
+        self.draw_ant(
+            scale=1.2,
+            translate=(self.pimp_canvas_size[0]/2, self.pimp_canvas_size[1]/2-60),
+            rotate=math.pi/2
+        )
 
     def generate_pimp_canvas(self):
         """ Generates a background canvas."""     
         canvas = toga.Canvas(
-            style=Pack(padding=10, flex=4, background_color='beige'),
+            style=Pack(padding=10, flex=4),#, background_color='beige'),
             on_press=self.on_press_canvas,
         )
         return canvas
@@ -79,8 +145,8 @@ class PimpScreen(toga.Box):
         print(f'Canvas pressed @ {x} x {y}')
     
     def draw_ant(self, scale=0.2, translate=(0, 0), rotate=0):
-        self.pimp_canvas.context.scale(scale, scale)
         self.pimp_canvas.context.translate(*translate)
+        self.pimp_canvas.context.scale(scale, scale)
         self.pimp_canvas.context.rotate(rotate)
 
         ant_color = '#393A3E'
@@ -173,6 +239,7 @@ class AntOne(toga.App):
         )
         self.main_window.content = self.pimpscreen
         self.main_window.show()
+        self.pimpscreen.on_screen_opened()
     
 
 def main():
