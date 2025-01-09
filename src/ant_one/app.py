@@ -10,6 +10,8 @@ from toga.style.pack import COLUMN, ROW
 
 from travertino.constants import BOLD
 
+from .user_settings import UserSettings
+
 
 def line_segments_gen(points, x_mirror=False):
     """Generator for points in the same continuous segmented line
@@ -31,8 +33,9 @@ def line_segments_gen(points, x_mirror=False):
 
 
 class PlayScreen(toga.Box):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, settings, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.settings = settings
 
         # Layout elements
         title = toga.Label('Ant One', style=Pack(padding=5, flex=1))
@@ -56,25 +59,25 @@ class PlayScreen(toga.Box):
 
 
 class PimpScreen(toga.Box):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, settings, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.settings = settings
 
         self.color_choices = ['#393A3E', '#422E13', '#7F5F16', '#537636', '#878532', '#DBB95F']
-        self.ini_color = [0,0,0]
-        self.ant_colouring = {
-            'antennae': self.color_choices[self.ini_color[0]],
-            'body': self.color_choices[self.ini_color[0]],
-            'legs': self.color_choices[self.ini_color[0]]
-        }
+        def get_color_idx(hex_color):
+            try:
+                return self.color_choices.index(hex_color)
+            except:
+                return 0
 
         # Layout elements
         self.top_title = toga.Label(
-            'Pimp my ant',
+            f'Hi {self.settings.name}, how are you today?',
             style=Pack(
-                padding=(5, 20),
+                padding=(5, 10),
                 flex=1,
                 font_weight=BOLD,
-                font_size=18,
+                font_size=16,
                 color='#393A3E',
             )
         )
@@ -90,6 +93,7 @@ class PimpScreen(toga.Box):
                             children=[
                                 toga.Label('Name', style=Pack(flex=1)),
                                 toga.TextInput(
+                                    value=self.settings.name,
                                     style=Pack(flex=2),
                                     on_change=self.on_change_name
                                 )
@@ -103,7 +107,7 @@ class PimpScreen(toga.Box):
                                     min=0,
                                     max=len(self.color_choices)-1,
                                     tick_count=len(self.color_choices),
-                                    value=0,
+                                    value=get_color_idx(self.settings.pimp_color_antennae),
                                     style=Pack(flex=2),
                                     on_change=self.on_change_antennaecolor
                                     )
@@ -117,7 +121,7 @@ class PimpScreen(toga.Box):
                                     min=0,
                                     max=len(self.color_choices)-1,
                                     tick_count=len(self.color_choices),
-                                    value=0,
+                                    value=get_color_idx(self.settings.pimp_color_body),
                                     style=Pack(flex=2),
                                     on_change=self.on_change_bodycolor
                                 )
@@ -131,7 +135,7 @@ class PimpScreen(toga.Box):
                                     min=0,
                                     max=len(self.color_choices)-1,
                                     tick_count=len(self.color_choices),
-                                    value=0,
+                                    value=get_color_idx(self.settings.pimp_color_legs),
                                     style=Pack(flex=2),
                                     on_change=self.on_change_legscolor
                                 )
@@ -163,17 +167,22 @@ class PimpScreen(toga.Box):
     
     def on_change_name(self, widget):
         self.top_title.text = f'Hi {widget.value}, how are you today?'
+        self.settings.name = widget.value
+        self.settings.save()
     
     def on_change_antennaecolor(self, widget):
-        self.ant_colouring['antennae'] = self.color_choices[int(widget.value)]
+        self.settings.pimp_color_antennae = self.color_choices[int(widget.value)]
+        self.settings.save()
         self.draw_ant(scale=1)
     
     def on_change_bodycolor(self, widget):
-        self.ant_colouring['body'] = self.color_choices[int(widget.value)]
+        self.settings.pimp_color_body = self.color_choices[int(widget.value)]
+        self.settings.save()
         self.draw_ant(scale=1)
     
     def on_change_legscolor(self, widget):
-        self.ant_colouring['legs'] = self.color_choices[int(widget.value)]
+        self.settings.pimp_color_legs = self.color_choices[int(widget.value)]
+        self.settings.save()
         self.draw_ant(scale=1)
 
     def generate_pimp_canvas(self):
@@ -206,7 +215,7 @@ class PimpScreen(toga.Box):
             'mid': [(45, 0), (50, 80), (50, 30)],
             'back': [(60, 0), (40, 60), (50, 20)]
         }
-        with self.pimp_canvas.context.Stroke(0, 0, color=self.ant_colouring['legs'], line_width=get_line_width(5, scale)) as stroke, self.pimp_canvas.context.Fill(color=self.ant_colouring['legs']) as fill:
+        with self.pimp_canvas.context.Stroke(0, 0, color=self.settings.pimp_color_legs, line_width=get_line_width(5, scale)) as stroke, self.pimp_canvas.context.Fill(color=self.settings.pimp_color_legs) as fill:
             for leg in leg_points.keys():
                 for i, coords in enumerate(line_segments_gen(leg_points[leg])):
                     if i == 0:
@@ -227,7 +236,7 @@ class PimpScreen(toga.Box):
         antenna_points = {
             '_': [(0, 0), (30, 90+45), (30, 160)]
         }
-        with self.pimp_canvas.context.Stroke(0, 0, color=self.ant_colouring['antennae'], line_width=get_line_width(2, scale)) as stroke:
+        with self.pimp_canvas.context.Stroke(0, 0, color=self.settings.pimp_color_antennae, line_width=get_line_width(2, scale)) as stroke:
             for i, coords in enumerate(line_segments_gen(antenna_points['_'])):
                 if i == 0:
                     stroke.move_to(*coords)
@@ -250,7 +259,7 @@ class PimpScreen(toga.Box):
         head2_end = (0, 20)
         head2_cp1 = (25, -25)
         head2_cp2 = (25, 25)
-        with self.pimp_canvas.context.Fill(color=self.ant_colouring['body']) as fill:
+        with self.pimp_canvas.context.Fill(color=self.settings.pimp_color_body) as fill:
             # Head
             fill.move_to(*head1_st)
             fill.bezier_curve_to(*head1_cp1, *head1_cp2, *head1_end)
@@ -274,11 +283,12 @@ class AntOne(toga.App):
         self.app_size = (640, 480)
 
         # User settings
-        # self.paths.data
+        user_setting_path = self.paths.data / 'user_settings.pkl'
+        settings = UserSettings(user_setting_path)
 
         # Screens
-        self.playscreen = PlayScreen()
-        self.pimpscreen = PimpScreen()
+        self.playscreen = PlayScreen(settings)
+        self.pimpscreen = PimpScreen(settings)
 
         # Layout assembly
         self.main_window = toga.MainWindow(
