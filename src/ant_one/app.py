@@ -33,9 +33,10 @@ def line_segments_gen(points, x_mirror=False):
 
 
 class PlayScreen(toga.Box):
-    def __init__(self, settings, *args, **kwargs):
+    def __init__(self, settings, game_controls, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.settings = settings
+        self.game_controls = game_controls
 
         # Layout elements
         top_bar = toga.Box(
@@ -51,7 +52,11 @@ class PlayScreen(toga.Box):
         self.bg_canvas = self.generate_bg_canvas()
         side_pane = toga.Box(
             children=[
-                toga.Label('Side pane')
+                toga.Label('Side pane'),
+                toga.Button(
+                    'Pimp '+settings.name,
+                    on_press=self.goto_pimp
+                )
             ],
             style=Pack(flex=1, direction=COLUMN)
         )
@@ -84,12 +89,16 @@ class PlayScreen(toga.Box):
 
     def on_press_canvas(self, widget, x, y):
         print(f'Canvas pressed @ {x} x {y}')
+    
+    def goto_pimp(self, widget):
+        self.game_controls('go to pimp')
 
 
 class PimpScreen(toga.Box):
-    def __init__(self, settings, *args, **kwargs):
+    def __init__(self, settings, game_controls, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.settings = settings
+        self.game_controls = game_controls
 
         self.color_choices = ['#393A3E', '#422E13', '#7F5F16', '#537636', '#878532', '#DBB95F']
         def get_color_idx(hex_color):
@@ -122,7 +131,7 @@ class PimpScreen(toga.Box):
                                 toga.Label('Name', style=Pack(flex=1)),
                                 toga.TextInput(
                                     value=self.settings.name,
-                                    style=Pack(flex=2),
+                                    style=Pack(flex=3),
                                     on_change=self.on_change_name
                                 )
                             ],
@@ -136,7 +145,7 @@ class PimpScreen(toga.Box):
                                     max=len(self.color_choices)-1,
                                     tick_count=len(self.color_choices),
                                     value=get_color_idx(self.settings.pimp_color_antennae),
-                                    style=Pack(flex=2),
+                                    style=Pack(flex=3),
                                     on_change=self.on_change_antennaecolor
                                     )
                             ]
@@ -150,7 +159,7 @@ class PimpScreen(toga.Box):
                                     max=len(self.color_choices)-1,
                                     tick_count=len(self.color_choices),
                                     value=get_color_idx(self.settings.pimp_color_body),
-                                    style=Pack(flex=2),
+                                    style=Pack(flex=3),
                                     on_change=self.on_change_bodycolor
                                 )
                             ]
@@ -164,13 +173,18 @@ class PimpScreen(toga.Box):
                                     max=len(self.color_choices)-1,
                                     tick_count=len(self.color_choices),
                                     value=get_color_idx(self.settings.pimp_color_legs),
-                                    style=Pack(flex=2),
+                                    style=Pack(flex=3),
                                     on_change=self.on_change_legscolor
                                 )
                             ]
+                        ),
+                        toga.Button(
+                            'Back to the game!',
+                            style=Pack(padding=30),
+                            on_press=self.goto_game
                         )
                     ],
-                    style=Pack(flex=3, direction=COLUMN, padding=10)
+                    style=Pack(flex=3, direction=COLUMN, padding=30)
                 )
             ],
             style=Pack(flex=1, direction=ROW)
@@ -224,6 +238,9 @@ class PimpScreen(toga.Box):
     def on_press_canvas(self, widget, x, y):
         print(f'Canvas pressed @ {x} x {y}')
     
+    def goto_game(self, widget):
+        self.game_controls('go to game')
+    
     def draw_ant(self, translate=(0, 0), scale=0.2, rotate=0):
         """ Inserts the drawing of an ant on the canvas
         translate: possibility to move the drawing
@@ -243,7 +260,14 @@ class PimpScreen(toga.Box):
             'mid': [(45, 0), (50, 80), (50, 30)],
             'back': [(60, 0), (40, 60), (50, 20)]
         }
-        with self.pimp_canvas.context.Stroke(0, 0, color=self.settings.pimp_color_legs, line_width=get_line_width(5, scale)) as stroke, self.pimp_canvas.context.Fill(color=self.settings.pimp_color_legs) as fill:
+        with (
+            self.pimp_canvas.context.Stroke(
+                0, 0, color=self.settings.pimp_color_legs, line_width=get_line_width(5, scale)
+            ) as stroke,
+            self.pimp_canvas.context.Fill(
+                color=self.settings.pimp_color_legs
+            ) as fill
+        ):
             for leg in leg_points.keys():
                 for i, coords in enumerate(line_segments_gen(leg_points[leg])):
                     if i == 0:
@@ -308,15 +332,15 @@ class AntOne(toga.App):
         """Construct and show the Toga application.
         """
         # Apps parameters
-        self.app_size = (640, 480)
+        self.app_size = (1000, 600)
 
         # User settings
         user_setting_path = self.paths.data / 'user_settings.pkl'
         settings = UserSettings(user_setting_path)
 
         # Screens
-        self.playscreen = PlayScreen(settings)
-        self.pimpscreen = PimpScreen(settings)
+        self.playscreen = PlayScreen(settings, self.game_controls)
+        self.pimpscreen = PimpScreen(settings, self.game_controls)
 
         # Layout assembly
         self.main_window = toga.Window(
@@ -327,6 +351,16 @@ class AntOne(toga.App):
         self.main_window.content = self.playscreen
         self.main_window.show()
         self.pimpscreen.generate_ant_drawing()
+
+    def game_controls(self, what):
+        match what:
+            case 'go to pimp':
+                self.main_window.content = self.pimpscreen
+            case 'go to game':
+                self.main_window.content = self.playscreen
+            case _:
+                print('Action not defined')
+
     
 
 def main():
