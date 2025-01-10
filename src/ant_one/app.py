@@ -38,18 +38,46 @@ class PlayScreen(toga.Box):
         self.settings = settings
 
         # Layout elements
-        title = toga.Label('Ant One', style=Pack(padding=5, flex=1))
+        top_bar = toga.Box(
+            children=[
+                toga.Label('Time info', style=Pack(flex=1)),
+                toga.Label('Population info', style=Pack(flex=1)),
+                toga.Label('Resource info', style=Pack(flex=1)),
+                toga.Label('Other info', style=Pack(flex=1)),
+                toga.Label('Other info', style=Pack(flex=1)),
+                ],
+            style=Pack(direction=ROW)
+        )
         self.bg_canvas = self.generate_bg_canvas()
+        side_pane = toga.Box(
+            children=[
+                toga.Label('Side pane')
+            ],
+            style=Pack(flex=1, direction=COLUMN)
+        )
+
+        content_box = toga.Box(
+            style=Pack(direction=ROW, flex=10),
+            children=[
+                toga.Box(
+                    children=[
+                        top_bar,
+                        self.bg_canvas,
+                    ],
+                    style=Pack(direction=COLUMN, flex=3)
+                ),
+                side_pane
+            ]
+        )
         
         # Layout assembly
         self.style.update(direction=COLUMN)
-        self.add(title)
-        self.add(self.bg_canvas)
+        self.add(content_box)
 
     def generate_bg_canvas(self):
         """ Generates a background canvas."""     
         canvas = toga.Canvas(
-            style=Pack(padding=10, flex=4, background_color='beige'),
+            style=Pack(padding=10, flex=15, background_color='#E9F0CF'),
             on_press=self.on_press_canvas,
         )
         return canvas
@@ -291,12 +319,12 @@ class AntOne(toga.App):
         self.pimpscreen = PimpScreen(settings)
 
         # Layout assembly
-        self.main_window = toga.MainWindow(
+        self.main_window = toga.Window(
             title=self.formal_name,
             size=self.app_size,
             resizable=False
         )
-        self.main_window.content = self.pimpscreen
+        self.main_window.content = self.playscreen
         self.main_window.show()
         self.pimpscreen.generate_ant_drawing()
     
