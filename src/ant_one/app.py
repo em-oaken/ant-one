@@ -111,7 +111,7 @@ class PimpScreen(toga.Box):
         self.top_title = toga.Label(
             f'Hi {self.settings.name}, how are you today?',
             style=Pack(
-                padding=(5, 10),
+                padding=(30, 30),
                 flex=1,
                 font_weight=BOLD,
                 font_size=16,
@@ -230,7 +230,7 @@ class PimpScreen(toga.Box):
     def generate_pimp_canvas(self):
         """ Generates a background canvas."""     
         canvas = toga.Canvas(
-            style=Pack(padding=10, flex=4),#, background_color='beige'),
+            style=Pack(padding=10, flex=4),
             on_press=self.on_press_canvas,
         )
         return canvas
@@ -333,6 +333,12 @@ class AntOne(toga.App):
         """
         # Apps parameters
         self.app_size = (1000, 600)
+        self.screen_size = self.screens[0].size
+
+        if self.app_size[0] > self.screen_size[0] or self.app_size[1] > self.screen_size[1]:
+            return 'Program finished, screen to small'
+        app_posx = (self.screen_size[0]-self.app_size[0])/2
+        app_posy = (self.screen_size[1]-self.app_size[1])/2
 
         # User settings
         user_setting_path = self.paths.data / 'user_settings.pkl'
@@ -346,8 +352,10 @@ class AntOne(toga.App):
         self.main_window = toga.Window(
             title=self.formal_name,
             size=self.app_size,
-            resizable=False
+            resizable=False,
+            position=(app_posx, app_posy)
         )
+        self.main_window.content = self.pimpscreen  # Required to ensure canvas size is not 0x0
         self.main_window.content = self.playscreen
         self.main_window.show()
         self.pimpscreen.generate_ant_drawing()
