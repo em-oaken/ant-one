@@ -30,7 +30,11 @@ def draw_ant(
         scale=0.2, 
         rotate=0
     ):
-    """ Inserts the drawing of an ant on the canvas
+    """ Inserts the drawing of an ant on the given canvas context
+    context: context of the canvas where to draw
+    pimp_color_legs: legs
+    pimp_color_antennae: antennae
+    pimp_color_body: body (head, thorax, abdomen)    
     translate: possibility to move the drawing
     scale: scaling factor, <1 to reduce size
     rotation: rotation in radians"""
@@ -38,9 +42,6 @@ def draw_ant(
     context.translate(*translate)
     context.scale(scale, scale)
     context.rotate(rotate)
-    # self.pimp_canvas.context.translate(*translate)
-    # self.pimp_canvas.context.scale(scale, scale)
-    # self.pimp_canvas.context.rotate(rotate)
 
     def get_line_width(at_scale_1, scale):
         return scale*at_scale_1
