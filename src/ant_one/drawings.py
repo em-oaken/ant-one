@@ -129,3 +129,16 @@ def draw_nest(
     with context.Fill(color='orange') as fill:
         fill.move_to(to_px(x), to_px(y))
         fill.arc(x=to_px(x), y=to_px(y), radius=to_px(radius))
+
+
+def draw_mini_ant(
+        context,
+        to_px,
+        x,
+        y,
+        o
+    ):
+    with context.Fill(color='blue') as fill:
+        fill.move_to(to_px(x), to_px(y))
+        fill.arc(x=to_px(x), y=to_px(y), radius=5)
+
