@@ -25,11 +25,11 @@ class AntOne(toga.App):
 
         # User settings
         user_setting_path = self.paths.data / 'user_settings.pkl'
-        settings = UserSettings(user_setting_path)
+        self.settings = UserSettings(user_setting_path)
 
         # Screens
-        self.playscreen = PlayScreen(settings, self.game_controls)
-        self.pimpscreen = PimpScreen(settings, self.game_controls)
+        self.playscreen_is_open = False
+        self.pimpscreen_is_open = False
 
         # Layout assembly
         self.main_window = toga.Window(
@@ -38,17 +38,25 @@ class AntOne(toga.App):
             resizable=False,
             position=(app_posx, app_posy)
         )
-        self.main_window.content = self.pimpscreen  # Required to ensure canvas size is not 0x0
-        self.main_window.content = self.playscreen
+        self.app_controls('go to game')
         self.main_window.show()
-        self.pimpscreen.draw_on_canvas()
 
-    def game_controls(self, what):
-        match what:
+    def app_controls(self, request):
+        match request:
             case 'go to pimp':
+                if not self.pimpscreen_is_open:
+                    self.pimpscreen = PimpScreen(self.settings, self.app_controls)
+                    self.pimpscreen_is_open = True
                 self.main_window.content = self.pimpscreen
+                self.pimpscreen.draw_on_canvas()
+
             case 'go to game':
+                if not self.playscreen_is_open:
+                    self.playscreen = PlayScreen(self.settings, self.app_controls)
+                    self.playscreen_is_open = True
                 self.main_window.content = self.playscreen
+                self.playscreen.start_game_engine()
+
             case _:
                 print('Action not defined')
 

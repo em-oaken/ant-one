@@ -3,6 +3,8 @@ import toga
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
+from .game_resources import World, Ant, Colony, Nest, Food, ConstructionMaterial
+
 
 class PlayScreen(toga.Box):
     def __init__(self, settings, game_controls, *args, **kwargs):
@@ -10,6 +12,21 @@ class PlayScreen(toga.Box):
         self.settings = settings
         self.game_controls = game_controls
         self.build_interface()
+        self.canvas.context.clear()
+
+    def start_game_engine(self):
+        self.world = World(
+            px_size=(
+                self.canvas.layout.width,
+                self.canvas.layout.height
+            )
+        )
+        self.nest = Nest()
+
+
+    
+    def render(self):
+        pass
 
     # Event handlers
     def on_press_canvas(self, widget, x, y):
@@ -31,7 +48,7 @@ class PlayScreen(toga.Box):
                 ],
             style=Pack(direction=ROW)
         )
-        bg_canvas = toga.Canvas(
+        self.canvas = toga.Canvas(
             style=Pack(padding=10, flex=15, background_color='#E9F0CF'),
             on_press=self.on_press_canvas,
         )
@@ -51,7 +68,7 @@ class PlayScreen(toga.Box):
             style=Pack(direction=ROW, flex=1),
             children=[
                 toga.Box(
-                    children=[top_bar, bg_canvas],
+                    children=[top_bar, self.canvas],
                     style=Pack(direction=COLUMN, flex=3)
                 ),
                 side_pane
