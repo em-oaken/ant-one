@@ -1,4 +1,5 @@
 
+import logging
 import math
 
 
@@ -138,7 +139,11 @@ def draw_mini_ant(
         y,
         o
     ):
-    with context.Fill(color='blue') as fill:
-        fill.move_to(to_px(x), to_px(y))
-        fill.arc(x=to_px(x), y=to_px(y), radius=5)
-
+    with context.Context() as sub_context:
+        sub_context.translate(to_px(x), to_px(y))
+        sub_context.rotate(o-math.pi/4)
+        with sub_context.Fill(color='grey') as fill:
+            fill.rect(x=0, y=0, width=6, height=6)
+            fill.arc(x=5, y=5, radius=5)
+        context.append(sub_context)
+    
