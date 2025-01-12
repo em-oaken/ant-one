@@ -117,3 +117,15 @@ def draw_ant(
         fill.quadratic_curve_to(95, -50, 140, 0)
         fill.move_to(70, 0)
         fill.quadratic_curve_to(95, 50, 140, 0)
+
+
+def draw_nest(
+        context,
+        to_px,
+        x,
+        y,
+        radius
+    ):
+    with context.Fill(color='orange') as fill:
+        fill.move_to(to_px(x), to_px(y))
+        fill.arc(x=to_px(x), y=to_px(y), radius=to_px(radius))

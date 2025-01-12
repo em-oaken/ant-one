@@ -54,8 +54,10 @@ class AntOne(toga.App):
                 if not self.playscreen_is_open:
                     self.playscreen = PlayScreen(self.settings, self.app_controls)
                     self.playscreen_is_open = True
-                self.main_window.content = self.playscreen
-                self.playscreen.start_game_engine()
+                    self.main_window.content = self.playscreen
+                    self.playscreen.initialize_game_engine()
+                else:
+                    self.main_window.content = self.playscreen
 
             case _:
                 print('Action not defined')
