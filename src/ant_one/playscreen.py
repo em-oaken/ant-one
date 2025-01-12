@@ -1,4 +1,5 @@
 
+import logging
 import toga
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
@@ -13,6 +14,7 @@ class PlayScreen(toga.Box):
         self.settings = settings
         self.game_controls = game_controls
         self.build_interface()
+        logging.info('Built interface of play screen')
 
     def initialize_game_engine(self):
         self.world = World(
@@ -25,6 +27,7 @@ class PlayScreen(toga.Box):
         self.colony = Colony(self.nest)
         self.colony.populate(3)
         self.render()
+        logging.info('Game initialised')
 
 
     def render(self):
@@ -36,7 +39,7 @@ class PlayScreen(toga.Box):
 
     # Event handlers
     def on_press_canvas(self, widget, x, y):
-        print(f'Canvas pressed @ {x} x {y}')
+        logging.info(f'Canvas pressed @ {x} x {y}')
     
     def goto_pimp(self, widget):
         self.game_controls('go to pimp')

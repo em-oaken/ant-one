@@ -1,4 +1,5 @@
 
+import logging
 import math
 
 import toga
@@ -55,7 +56,7 @@ class PimpScreen(toga.Box):
         self.draw_on_canvas()
 
     def on_press_canvas(self, widget, x, y):
-        print(f'Canvas pressed @ {x} x {y}')
+        logging.info(f'Canvas pressed @ {x} x {y}')
     
     def goto_game(self, widget):
         self.game_controls('go to game')

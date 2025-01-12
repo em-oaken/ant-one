@@ -3,11 +3,18 @@ Build Ant One's destiny
 """
 
 
+import logging
 import toga
 
 from .playscreen import PlayScreen
 from .pimpscreen import PimpScreen
 from .user_settings import UserSettings
+
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)s %(message)s',
+    level=logging.INFO
+    )
 
 
 class AntOne(toga.App):
@@ -19,7 +26,8 @@ class AntOne(toga.App):
         self.screen_size = self.screens[0].size
 
         if self.app_size[0] > self.screen_size[0] or self.app_size[1] > self.screen_size[1]:
-            return 'Program terminated due to screen too small'
+            logging.critical('Program terminated due to screen too small')
+            return
         app_posx = (self.screen_size[0]-self.app_size[0])/2
         app_posy = (self.screen_size[1]-self.app_size[1])/2
 
@@ -60,7 +68,7 @@ class AntOne(toga.App):
                     self.main_window.content = self.playscreen
 
             case _:
-                print('Action not defined')
+                logging.critical('Action not defined')
 
     
 
