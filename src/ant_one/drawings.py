@@ -139,11 +139,20 @@ def draw_mini_ant(
         y,
         o
     ):
+    body_clr = '#9BC3E5'
+    contour_clr = '#5B9BD5'
     with context.Context() as sub_context:
         sub_context.translate(to_px(x), to_px(y))
         sub_context.rotate(o-math.pi/4)
-        with sub_context.Fill(color='grey') as fill:
+
+        with sub_context.Fill(color=contour_clr) as fill:
             fill.rect(x=0, y=0, width=6, height=6)
+        with sub_context.Stroke(color=contour_clr, line_width=1) as fill:
+            fill.rect(x=0, y=0, width=6, height=6)
+        with sub_context.Fill(color=body_clr) as fill:
             fill.arc(x=5, y=5, radius=5)
+        with sub_context.Stroke(color=contour_clr, line_width=1) as fill:
+            fill.arc(x=5, y=5, radius=5)
+        
         context.append(sub_context)
     
