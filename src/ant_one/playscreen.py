@@ -9,7 +9,17 @@ class PlayScreen(toga.Box):
         super().__init__(*args, **kwargs)
         self.settings = settings
         self.game_controls = game_controls
+        self.build_interface()
 
+    # Event handlers
+    def on_press_canvas(self, widget, x, y):
+        print(f'Canvas pressed @ {x} x {y}')
+    
+    def goto_pimp(self, widget):
+        self.game_controls('go to pimp')
+    
+    # Interface
+    def build_interface(self):
         # Layout elements
         top_bar = toga.Box(
             children=[
@@ -21,46 +31,33 @@ class PlayScreen(toga.Box):
                 ],
             style=Pack(direction=ROW)
         )
-        self.bg_canvas = self.generate_bg_canvas()
+        bg_canvas = toga.Canvas(
+            style=Pack(padding=10, flex=15, background_color='#E9F0CF'),
+            on_press=self.on_press_canvas,
+        )
         side_pane = toga.Box(
             children=[
                 toga.Label('Side pane'),
                 toga.Button(
-                    'Pimp '+settings.name,
+                    'Pimp '+self.settings.name,
                     on_press=self.goto_pimp
                 )
             ],
             style=Pack(flex=1, direction=COLUMN)
         )
 
-        content_box = toga.Box(
-            style=Pack(direction=ROW, flex=10),
+        # Layout assembly
+        main_box = toga.Box(
+            style=Pack(direction=ROW, flex=1),
             children=[
                 toga.Box(
-                    children=[
-                        top_bar,
-                        self.bg_canvas,
-                    ],
+                    children=[top_bar, bg_canvas],
                     style=Pack(direction=COLUMN, flex=3)
                 ),
                 side_pane
             ]
         )
         
-        # Layout assembly
         self.style.update(direction=COLUMN)
-        self.add(content_box)
+        self.add(main_box)
 
-    def generate_bg_canvas(self):
-        """ Generates a background canvas."""     
-        canvas = toga.Canvas(
-            style=Pack(padding=10, flex=15, background_color='#E9F0CF'),
-            on_press=self.on_press_canvas,
-        )
-        return canvas
-
-    def on_press_canvas(self, widget, x, y):
-        print(f'Canvas pressed @ {x} x {y}')
-    
-    def goto_pimp(self, widget):
-        self.game_controls('go to pimp')
