@@ -9,15 +9,17 @@ from .drawings import draw_nest, draw_mini_ant
 
 
 class PlayScreen(toga.Box):
-    def __init__(self, settings, game_controls, *args, **kwargs):
+    def __init__(self, settings, game_controls, tau, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.settings = settings
         self.game_controls = game_controls
+        self.tau = tau
         self.build_interface()
         logging.info('Built interface of play screen')
 
     def initialize_game_engine(self):
         self.world = World(
+            tau=self.tau,
             px_size=(
                 self.canvas.layout.width,
                 self.canvas.layout.height
@@ -25,10 +27,11 @@ class PlayScreen(toga.Box):
         )
         self.nest = Nest(self.world)
         self.colony = Colony(self.nest)
-        self.colony.populate(5)
+
+        self.colony.populate(3)
         self.render()
         logging.info('Game initialised')
-
+        self.tau.add_render(self.render)
 
     def render(self):
         context = self.canvas.context

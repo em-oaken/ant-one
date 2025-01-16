@@ -25,10 +25,12 @@ class Position():
 
 class World():
     """Defines the environment where the game happens.
+    tau: Time engine handling objects and events
     px_size: Canvas area available in pixels
     
     to_px: Converter from World dimension to pixels. Assumes that ratio is the same on both axis."""
-    def __init__(self, px_size):
+    def __init__(self, tau, px_size):
+        self.tau = tau
         self.px_size = px_size  # e.g. 1000
         self.size = px_size  # e.g. 5000
     
@@ -89,6 +91,12 @@ class Ant():
     def __init__(self, colony):
         self.colony = colony
         self.position = self.colony.nest.give_newborn_position()
+        self.colony.nest.world.tau.add_object(self)  # Add the ant to the monitored objects
+    
+    def live(self):
+        """Called frequently by Tau"""
+        self.position.x += random.randint(-10, 10)
+        self.position.y += random.randint(-10, 10)
     
     @property
     def x(self):

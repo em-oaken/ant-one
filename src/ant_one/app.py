@@ -9,6 +9,7 @@ import toga
 from .playscreen import PlayScreen
 from .pimpscreen import PimpScreen
 from .user_settings import UserSettings
+from .tau import Tau
 
 
 logging.basicConfig(
@@ -39,6 +40,9 @@ class AntOne(toga.App):
         self.playscreen_is_open = False
         self.pimpscreen_is_open = False
 
+        # Time engine
+        self.tau = Tau()
+
         # Layout assembly
         self.main_window = toga.Window(
             title=self.formal_name,
@@ -60,7 +64,7 @@ class AntOne(toga.App):
 
             case 'go to game':
                 if not self.playscreen_is_open:
-                    self.playscreen = PlayScreen(self.settings, self.app_controls)
+                    self.playscreen = PlayScreen(self.settings, self.app_controls, self.tau)
                     self.playscreen_is_open = True
                     self.main_window.content = self.playscreen
                     self.playscreen.initialize_game_engine()
@@ -69,8 +73,14 @@ class AntOne(toga.App):
 
             case _:
                 logging.critical('Action not defined')
+    
+    async def on_running(self, **kwargs):
+        await self.tau.event_loop_manager()
 
     
-
 def main():
     return AntOne()
+
+if __name__ == "__main__":
+    app = main()
+    app.main_loop()
