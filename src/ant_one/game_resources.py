@@ -67,7 +67,7 @@ class Nest():
         self.position = position
         self.radius = random.randint(
             round(radius_max*0.05),
-            round(radius_max*0.6)
+            round(radius_max*0.10)
         )
     
     def give_newborn_position(self):

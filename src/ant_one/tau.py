@@ -11,6 +11,7 @@ Name chosen after the greek letter regularly used for time in science.
 import asyncio
 import datetime
 import logging
+import time
 
 
 class Tau():
@@ -29,14 +30,17 @@ class Tau():
 
     async def event_loop_manager(self):
         """Manages the event loop"""
+        t_fullloop = time.perf_counter()
         while True:
+            t_active = time.perf_counter()
             self.loopno += 1
             self.looptime = datetime.datetime.now()
 
-            logging.info(f'Loop #{self.loopno}')
             for obj in self.objects:
                 obj.live()
             self.render()
             
-            await asyncio.sleep(0.1)
+            # logging.info(f'Loop #{self.loopno} over\tRun {1000*(time.perf_counter()-t_active):4.1f}ms\tLoop {1000*(time.perf_counter()-t_fullloop):4.1f}ms')
+            t_fullloop = time.perf_counter()
+            await asyncio.sleep(0.03)
 

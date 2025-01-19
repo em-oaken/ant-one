@@ -120,7 +120,7 @@ def draw_ant(
         fill.quadratic_curve_to(95, 50, 140, 0)
 
 
-def draw_nest(
+def draw_nest_entrance(
         context,
         to_px,
         x,

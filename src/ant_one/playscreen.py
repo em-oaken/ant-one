@@ -5,7 +5,7 @@ from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
 from .game_resources import World, Ant, Colony, Nest, Food, ConstructionMaterial
-from .drawings import draw_nest, draw_mini_ant
+from .drawings import draw_nest_entrance, draw_mini_ant
 
 
 class PlayScreen(toga.Box):
@@ -36,7 +36,7 @@ class PlayScreen(toga.Box):
     def render(self):
         context = self.canvas.context
         context.clear()
-        draw_nest(context, self.world.to_px, self.nest.x, self.nest.y, self.nest.radius)
+        draw_nest_entrance(context, self.world.to_px, self.nest.x, self.nest.y, self.nest.radius)
         for ant in self.colony.population:
             draw_mini_ant(context, self.world.to_px, ant.x, ant.y, ant.o)
 
