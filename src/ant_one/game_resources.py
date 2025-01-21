@@ -100,22 +100,25 @@ class Ant():
         self.max_pace = 10  # For now in px
 
         self.mode = 'Foraging'
+        self.speed_factor_h = [0, 0]
     
     def live(self):
         """Called frequently by Tau"""
         if self.mode == 'Foraging':
-            # TODO: Factor for smoothening speed factor (avoid sudden changes)
-            speed_factor = random.random()  # Normal around 0
-            rotation_angle = random.gauss(sigma=0.2)  # Most values in [-0.5 ... 0.5]
-            rotation = max(0, 1-speed_factor*2) * rotation_angle  # The more speed, the less turning
-
+            # First go straight, then turn
+            new_speed_factor = random.random()
+            self.speed_factor_h.append(new_speed_factor)
+            speed_factor = sum(self.speed_factor_h) / 3
+            self.speed_factor_h.pop(0)
 
             move_x = -round(self.max_pace*speed_factor*math.cos(self.o))  # ignores frame duration...
             move_y = -round(self.max_pace*speed_factor*math.sin(self.o))
             self.position.x += move_x
             self.position.y += move_y
 
-            logging.info(f'O {self.o:.1f} + {rotation:.1f}*pi = New O {(self.o + rotation * math.pi):.1f}')
+            rotation_angle = random.gauss(sigma=0.2)  # Most values in [-0.5 ... 0.5]
+            rotation = max(0, 1-speed_factor*2) * rotation_angle  # The more speed, the less turning
+            # logging.info(f'O {self.o:.1f} + {rotation:.1f}*pi = New O {(self.o + rotation * math.pi):.1f}')
             self.o = (self.o + rotation * math.pi)
     
     @property
