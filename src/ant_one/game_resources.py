@@ -21,6 +21,10 @@ class Position():
     @property
     def o(self):
         return self.orientation
+    
+    @o.setter
+    def o(self, value):
+        self.orientation = value
 
 
 class World():
@@ -92,11 +96,27 @@ class Ant():
         self.colony = colony
         self.position = self.colony.nest.give_newborn_position()
         self.colony.nest.world.tau.add_object(self)  # Add the ant to the monitored objects
+        
+        self.max_pace = 10  # For now in px
+
+        self.mode = 'Foraging'
     
     def live(self):
         """Called frequently by Tau"""
-        self.position.x += random.randint(-10, 10)
-        self.position.y += random.randint(-10, 10)
+        if self.mode == 'Foraging':
+            # TODO: Factor for smoothening speed factor (avoid sudden changes)
+            speed_factor = random.random()  # Normal around 0
+            rotation_angle = random.gauss(sigma=0.2)  # Most values in [-0.5 ... 0.5]
+            rotation = max(0, 1-speed_factor*2) * rotation_angle  # The more speed, the less turning
+
+
+            move_x = -round(self.max_pace*speed_factor*math.cos(self.o))  # ignores frame duration...
+            move_y = -round(self.max_pace*speed_factor*math.sin(self.o))
+            self.position.x += move_x
+            self.position.y += move_y
+
+            logging.info(f'O {self.o:.1f} + {rotation:.1f}*pi = New O {(self.o + rotation * math.pi):.1f}')
+            self.o = (self.o + rotation * math.pi)
     
     @property
     def x(self):
@@ -109,6 +129,10 @@ class Ant():
     @property
     def o(self):
         return self.position.o
+    
+    @o.setter
+    def o(self, value):
+        self.position.o = value
     
 
 

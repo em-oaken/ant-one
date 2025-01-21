@@ -28,7 +28,7 @@ class PlayScreen(toga.Box):
         self.nest = Nest(self.world)
         self.colony = Colony(self.nest)
 
-        self.colony.populate(3)
+        self.colony.populate(1)
         self.render()
         logging.info('Game initialised')
         self.tau.add_render(self.render)
