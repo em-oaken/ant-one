@@ -19,28 +19,27 @@ class Tau():
         """Initiates time engine"""
         self.start_time = datetime.datetime.now()
         self.loopno = 0
-        self.objects = []
+        self.living_objects = []
         self.render = None
     
-    def add_object(self, object):
-        self.objects.append(object)
+    def add_life(self, object):
+        self.living_objects.append(object)
     
     def add_render(self, render):
         self.render = render
 
     async def event_loop_manager(self):
         """Manages the event loop"""
-        t_fullloop = time.perf_counter()
+        self.loop_starttime = datetime.datetime.now()
         while True:
-            t_active = time.perf_counter()
             self.loopno += 1
-            self.looptime = datetime.datetime.now()
+            time_now = datetime.datetime.now()
+            self.loop_duration = (time_now - self.loop_starttime).total_seconds()
+            self.loop_starttime = time_now
 
-            for obj in self.objects:
+            for obj in self.living_objects:
                 obj.live()
             self.render()
             
-            # logging.info(f'Loop #{self.loopno} over\tRun {1000*(time.perf_counter()-t_active):4.1f}ms\tLoop {1000*(time.perf_counter()-t_fullloop):4.1f}ms')
-            t_fullloop = time.perf_counter()
             await asyncio.sleep(0.03)
 

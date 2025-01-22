@@ -120,9 +120,9 @@ class Ant():
         self.colony = colony
         self.world = self.colony.nest.world
         self.position = self.colony.nest.give_newborn_position()
-        self.world.tau.add_object(self)  # Add the ant to the monitored objects
+        self.world.tau.add_life(self)  # Allow the ant to be alive
         
-        self.max_pace = 10  # In game-units per second
+        self.max_pace = 100  # In game-length-units per second
 
         self.mode = AntActivity.FORAGING
         self.speed_factor_h = [0, 0]
@@ -144,13 +144,14 @@ class Ant():
         new_speed_factor = random.random()
         new_speed_factor_h = self.speed_factor_h + [new_speed_factor]
         speed_factor = sum(new_speed_factor_h) / 3
+        max_distance = self.max_pace*self.world.tau.loop_duration
 
-        move_x = -round(self.max_pace*speed_factor*math.cos(self.o))  # ignores frame duration...
-        move_y = -round(self.max_pace*speed_factor*math.sin(self.o))
+        move_x = -round(max_distance*speed_factor*math.cos(self.o))
+        move_y = -round(max_distance*speed_factor*math.sin(self.o))
         new_x = self.x + move_x
         new_y = self.y + move_y
 
-        rotation_angle = random.gauss(sigma=0.2)  # Most values in [-0.5 ... 0.5]
+        rotation_angle = random.gauss(sigma=6)*self.world.tau.loop_duration
         rotation = max(0, 1-speed_factor*2) * rotation_angle  # The more speed, the less turning
         new_o = (self.o + rotation * math.pi)
         return Position(new_x, new_y, new_o), speed_factor
