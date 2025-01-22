@@ -36,6 +36,7 @@ class Tau():
             time_now = datetime.datetime.now()
             self.loop_duration = (time_now - self.loop_starttime).total_seconds()
             self.loop_starttime = time_now
+            self.game_duration = (time_now - self.start_time).total_seconds()
 
             for obj in self.living_objects:
                 obj.live()

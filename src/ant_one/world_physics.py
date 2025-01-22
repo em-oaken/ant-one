@@ -24,3 +24,4 @@ class Position():
 
     def __repr__(self):
         return f'Position (X={self.x:.0f}, Y={self.y:.0f}, o={self.o:.2f})'
+

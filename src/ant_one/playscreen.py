@@ -27,9 +27,9 @@ class PlayScreen(toga.Box):
         )
         self.nest = Nest(self.world)
         self.colony = Colony(self.nest)
-
-        self.colony.populate(1)
-        self.render()
+        self.colony.populate(10)
+        
+        # self.render()
         logging.info('Game initialised')
         self.tau.add_render(self.render)
 
@@ -39,6 +39,10 @@ class PlayScreen(toga.Box):
         draw_nest_entrance(context, self.world.to_px, self.nest.x, self.nest.y, self.nest.radius)
         for ant in self.colony.population:
             draw_mini_ant(context, self.world.to_px, ant.x, ant.y, ant.o)
+        # Update top bar
+        self.top_bar_infos[0].text = f'{self.tau.loopno:04}  |  {self.tau.game_duration:.2f}s'
+        self.top_bar_infos[1].text = f'{len(self.colony.population)} ants'
+        self.top_bar_infos[4].text = f'{1/self.tau.loop_duration:.0f} fps'
 
     # Event handlers
     def on_press_canvas(self, widget, x, y):
@@ -50,16 +54,8 @@ class PlayScreen(toga.Box):
     # Interface
     def build_interface(self):
         # Layout elements
-        top_bar = toga.Box(
-            children=[
-                toga.Label('Time info', style=Pack(flex=1)),
-                toga.Label('Population info', style=Pack(flex=1)),
-                toga.Label('Resource info', style=Pack(flex=1)),
-                toga.Label('Other info', style=Pack(flex=1)),
-                toga.Label('Other info', style=Pack(flex=1)),
-                ],
-            style=Pack(direction=ROW)
-        )
+        self.top_bar_infos = [toga.Label('...', style=Pack(flex=1)) for _ in range(5)]
+        top_bar = toga.Box(children=self.top_bar_infos, style=Pack(direction=ROW))
         self.canvas = toga.Canvas(
             style=Pack(padding=10, flex=15, background_color='#E9F0CF'),
             on_press=self.on_press_canvas,
