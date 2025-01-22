@@ -2,6 +2,7 @@
 import logging
 import math
 import random
+from enum import Enum
 
 
 class Length(float):
@@ -26,6 +27,9 @@ class Position():
     def o(self, value):
         self.orientation = value
 
+    def __repr__(self):
+        return f'Position (X={self.x:.0f}, Y={self.y:.0f}, o={self.o:.2f})'
+
 
 class World():
     """Defines the environment where the game happens.
@@ -37,6 +41,7 @@ class World():
         self.tau = tau
         self.px_size = px_size  # e.g. 1000
         self.size = px_size  # e.g. 5000
+        self.no_go_border = 20  # In game units
     
     def to_px(self, x):
         return round(x*self.px_size[0]/self.size[0])
@@ -61,6 +66,33 @@ class World():
         x = point.x + radius * math.cos(theta)
         y = point.y + radius * math.sin(theta)
         return Position(x, y, theta)
+    
+    def validate_position(self, position: Position) -> tuple[bool, Position]:
+        validated = True
+        new_x, new_y = None, None
+        if position.x < self.no_go_border:
+            validated = False
+            new_x = self.no_go_border
+        elif position.x > self.size[0]-self.no_go_border:
+            validated = False
+            new_x = self.size[0]-self.no_go_border
+        if position.y < self.no_go_border:
+            validated = False
+            new_y = self.no_go_border
+        elif position.y > self.size[1]-self.no_go_border:
+            validated = False
+            new_y = self.size[1]-self.no_go_border
+
+        if validated:
+            return True, position
+        return (
+            False,
+            Position(
+                new_x or position.x,
+                new_y or position.y,
+                position.o
+            )
+        )
 
 
 class Nest():
@@ -90,6 +122,10 @@ class Nest():
         return self.position.y    
 
 
+class AntActivity(Enum):
+    FORAGING = 'Foraging'
+
+
 class Ant():
     """Defines ants"""
     def __init__(self, colony):
@@ -99,28 +135,42 @@ class Ant():
         
         self.max_pace = 10  # For now in px
 
-        self.mode = 'Foraging'
+        self.mode = AntActivity.FORAGING
         self.speed_factor_h = [0, 0]
     
     def live(self):
         """Called frequently by Tau"""
-        if self.mode == 'Foraging':
-            # First go straight, then turn
-            new_speed_factor = random.random()
-            self.speed_factor_h.append(new_speed_factor)
-            speed_factor = sum(self.speed_factor_h) / 3
+        if self.mode == AntActivity.FORAGING:
+            new_pos, speed_factor = self.gen_random_movement()
+            new_pos_acceptable, closest_pos = self.colony.nest.world.validate_position(new_pos)
+            if not new_pos_acceptable:
+                new_pos = closest_pos
+                speed_factor = 0
+            self.speed_factor_h.append(speed_factor)
             self.speed_factor_h.pop(0)
-
-            move_x = -round(self.max_pace*speed_factor*math.cos(self.o))  # ignores frame duration...
-            move_y = -round(self.max_pace*speed_factor*math.sin(self.o))
-            self.position.x += move_x
-            self.position.y += move_y
-
-            rotation_angle = random.gauss(sigma=0.2)  # Most values in [-0.5 ... 0.5]
-            rotation = max(0, 1-speed_factor*2) * rotation_angle  # The more speed, the less turning
-            # logging.info(f'O {self.o:.1f} + {rotation:.1f}*pi = New O {(self.o + rotation * math.pi):.1f}')
-            self.o = (self.o + rotation * math.pi)
+            self.change_position(new_pos)
     
+    def gen_random_movement(self):
+        # First go straight, then turn
+        new_speed_factor = random.random()
+        new_speed_factor_h = self.speed_factor_h + [new_speed_factor]
+        speed_factor = sum(new_speed_factor_h) / 3
+
+        move_x = -round(self.max_pace*speed_factor*math.cos(self.o))  # ignores frame duration...
+        move_y = -round(self.max_pace*speed_factor*math.sin(self.o))
+        new_x = self.x + move_x
+        new_y = self.y + move_y
+
+        rotation_angle = random.gauss(sigma=0.2)  # Most values in [-0.5 ... 0.5]
+        rotation = max(0, 1-speed_factor*2) * rotation_angle  # The more speed, the less turning
+        new_o = (self.o + rotation * math.pi)
+        return Position(new_x, new_y, new_o), speed_factor
+
+    def change_position(self, new_pos):
+        self.position.x = new_pos.x
+        self.position.y = new_pos.y
+        self.position.o = new_pos.o
+
     @property
     def x(self):
         return self.position.x
@@ -132,11 +182,6 @@ class Ant():
     @property
     def o(self):
         return self.position.o
-    
-    @o.setter
-    def o(self, value):
-        self.position.o = value
-    
 
 
 class Colony():
