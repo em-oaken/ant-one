@@ -4,31 +4,8 @@ import math
 import random
 from enum import Enum
 
-
-class Length(float):
-    """Defines a length int he World"""
-    def __init__(self, x):
-        self.x = x
-
-
-class Position():
-    """Defines a position in the World.
-    May also define orientation of a body (designed for ants representation)"""
-    def __init__(self, x, y, orientation=0):
-        self.x = x
-        self.y = y
-        self.orientation = orientation  # alias = o
-    
-    @property
-    def o(self):
-        return self.orientation
-    
-    @o.setter
-    def o(self, value):
-        self.orientation = value
-
-    def __repr__(self):
-        return f'Position (X={self.x:.0f}, Y={self.y:.0f}, o={self.o:.2f})'
+from .tau import Tau
+from .world_physics import Length, Position
 
 
 class World():
@@ -37,16 +14,16 @@ class World():
     px_size: Canvas area available in pixels
     
     to_px: Converter from World dimension to pixels. Assumes that ratio is the same on both axis."""
-    def __init__(self, tau, px_size):
+    def __init__(self, tau: Tau, px_size: int) -> None:
         self.tau = tau
         self.px_size = px_size  # e.g. 1000
         self.size = px_size  # e.g. 5000
         self.no_go_border = 20  # In game units
     
-    def to_px(self, x):
+    def to_px(self, x: Length) -> int:
         return round(x*self.px_size[0]/self.size[0])
     
-    def make_nest(self):
+    def make_nest(self) -> tuple[Position, Length]:
         return (
             Position(
                 random.randint(round(self.size[0]*0.1), int(self.size[0]*0.9)), 
@@ -55,13 +32,13 @@ class World():
             Length(round(self.size[0]*0.1))
         )
     
-    def provide_newborn_position(self):
+    def provide_newborn_position(self) -> Position:
         return Position(
                 random.randint(round(self.size[0]*0.1), int(self.size[0]*0.9)), 
                 random.randint(round(self.size[1]*0.1), int(self.size[1]*0.9))
             )
     
-    def make_position_around(self, point: Position, radius=0):
+    def make_position_around(self, point: Position, radius: int=0) -> Position:
         theta = 2*math.pi*random.random()
         x = point.x + radius * math.cos(theta)
         y = point.y + radius * math.sin(theta)
@@ -97,7 +74,7 @@ class World():
 
 class Nest():
     """Defines where the colony of Ant One lives"""
-    def __init__(self, world):
+    def __init__(self, world: World) -> None:
         self.world = world
         position, radius_max = self.world.make_nest()
         self.position = position
@@ -106,7 +83,7 @@ class Nest():
             round(radius_max*0.10)
         )
     
-    def give_newborn_position(self):
+    def give_newborn_position(self) -> Position:
         """Generates a newborn position around the nest"""
         return self.world.make_position_around(
             point=self.position,
@@ -119,7 +96,18 @@ class Nest():
     
     @property
     def y(self):
-        return self.position.y    
+        return self.position.y
+
+
+class Colony():
+    """Defines the colony of ants that Ant One leads"""
+    def __init__(self, nest: Nest) -> None:
+        self.nest = nest
+        self.population = []
+
+    def populate(self, n_ants: int) -> None:
+        newborns = [Ant(self) for _ in range(n_ants)]
+        self.population.extend(newborns)
 
 
 class AntActivity(Enum):
@@ -128,21 +116,22 @@ class AntActivity(Enum):
 
 class Ant():
     """Defines ants"""
-    def __init__(self, colony):
+    def __init__(self, colony: Colony) -> None:
         self.colony = colony
+        self.world = self.colony.nest.world
         self.position = self.colony.nest.give_newborn_position()
-        self.colony.nest.world.tau.add_object(self)  # Add the ant to the monitored objects
+        self.world.tau.add_object(self)  # Add the ant to the monitored objects
         
-        self.max_pace = 10  # For now in px
+        self.max_pace = 10  # In game-units per second
 
         self.mode = AntActivity.FORAGING
         self.speed_factor_h = [0, 0]
     
-    def live(self):
+    def live(self) -> None:
         """Called frequently by Tau"""
         if self.mode == AntActivity.FORAGING:
             new_pos, speed_factor = self.gen_random_movement()
-            new_pos_acceptable, closest_pos = self.colony.nest.world.validate_position(new_pos)
+            new_pos_acceptable, closest_pos = self.world.validate_position(new_pos)
             if not new_pos_acceptable:
                 new_pos = closest_pos
                 speed_factor = 0
@@ -150,7 +139,7 @@ class Ant():
             self.speed_factor_h.pop(0)
             self.change_position(new_pos)
     
-    def gen_random_movement(self):
+    def gen_random_movement(self) -> Position:
         # First go straight, then turn
         new_speed_factor = random.random()
         new_speed_factor_h = self.speed_factor_h + [new_speed_factor]
@@ -166,7 +155,7 @@ class Ant():
         new_o = (self.o + rotation * math.pi)
         return Position(new_x, new_y, new_o), speed_factor
 
-    def change_position(self, new_pos):
+    def change_position(self, new_pos: Position) -> None:
         self.position.x = new_pos.x
         self.position.y = new_pos.y
         self.position.o = new_pos.o
@@ -182,17 +171,6 @@ class Ant():
     @property
     def o(self):
         return self.position.o
-
-
-class Colony():
-    """Defines the colony of ants that Ant One leads"""
-    def __init__(self, nest):
-        self.nest = nest
-        self.population = []
-
-    def populate(self, n_ants):
-        newborns = [Ant(self) for _ in range(n_ants)]
-        self.population.extend(newborns)
 
 
 class Resource():
