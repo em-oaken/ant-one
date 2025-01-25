@@ -116,11 +116,11 @@ class Colony():
     
     def ant_birth(self):
         position = self.nest.give_newborn_position()
-        mode = AntActivity.FORAGING
-        return position, mode
+        job = Job.FORAGING
+        return position, job
 
 
-class AntActivity(Enum):
+class Job(Enum):
     FORAGING = 'Foraging'
 
 
@@ -134,14 +134,14 @@ class Ant():
         self.max_pace = 100  # In game-length-units per second
 
         # Status
-        self.position, self.mode = self.colony.ant_birth()
+        self.position, self.job = self.colony.ant_birth()
         self.speed_factor_h = [0, 0]
 
         self.world.add_life(self)  # Allow the ant to be alive
     
     def live(self) -> None:
         """Called frequently by Tau"""
-        if self.mode == AntActivity.FORAGING:
+        if self.job == Job.FORAGING:
             new_pos, speed_factor = self.gen_random_movement()
             new_pos_acceptable, closest_pos = self.world.validate_position(new_pos)
             if not new_pos_acceptable:
