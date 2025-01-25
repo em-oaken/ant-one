@@ -109,10 +109,14 @@ class Colony():
     """Defines the colony of ants that Ant One leads"""
     def __init__(self, nest: Nest) -> None:
         self.nest = nest
+        self.world = self.nest.world
         self.population = []
         self.ant_idno = 0
+
+        self.stock_food = 5.5
         # Needs is the base to define what job will be given to ants
         self.needs = { need: 0 for need in ColonyNeed }
+        self.world.add_life(self)
 
     def populate(self, n_ants: int) -> None:
         newborns = [Ant(self) for _ in range(n_ants)]
@@ -129,6 +133,17 @@ class Colony():
         position = self.nest.give_newborn_position()
         job = Job.JOBLESS
         return idno, position, job
+    
+    def live(self):
+        # Colony looses 1 food unit per minute
+        stockfood_decr = - (1/60) * self.world.tau.loop_duration
+        self.stock_food = max(0, self.stock_food + stockfood_decr)
+
+        # Need to collect food increases by +0.1/min if stock of food below 5
+        needgetfood_incr = 0 if self.stock_food>=5 else (0.1/60)*self.world.tau.loop_duration
+        self.needs[ColonyNeed.GETFOOD] = min(1, self.needs[ColonyNeed.GETFOOD]+needgetfood_incr)
+
+        logging.info(f'Colony has {self.stock_food:.2f} food with a need of {self.needs[ColonyNeed.GETFOOD]:.2f}')
 
 
 class Job(Enum):
@@ -190,7 +205,12 @@ class Ant():
             self.speed_factor_h.pop(0)
             self.change_position(new_pos)
 
-    
+    def change_position(self, new_pos: Position) -> None:
+        self.position.x = new_pos.x
+        self.position.y = new_pos.y
+        self.position.o = new_pos.o
+        # TODO: Interaction with environment (nest)
+
     def gen_random_movement(self) -> Position:
         # First go straight, then turn
         new_speed_factor = random.random()
@@ -207,11 +227,6 @@ class Ant():
         rotation = max(0, 1-speed_factor*2) * rotation_angle  # The more speed, the less turning
         new_o = (self.o + rotation * math.pi)
         return Position(new_x, new_y, new_o), speed_factor
-
-    def change_position(self, new_pos: Position) -> None:
-        self.position.x = new_pos.x
-        self.position.y = new_pos.y
-        self.position.o = new_pos.o
 
     @property
     def x(self):
