@@ -19,6 +19,11 @@ class World():
         self.px_size = px_size  # e.g. 1000
         self.size = px_size  # e.g. 5000
         self.no_go_border = 20  # In game units
+
+        self.living_objects = []
+    
+    def add_life(self, object):
+        self.living_objects.append(object)
     
     def to_px(self, x: Length) -> int:
         return round(x*self.px_size[0]/self.size[0])
@@ -120,7 +125,7 @@ class Ant():
         self.colony = colony
         self.world = self.colony.nest.world
         self.position = self.colony.nest.give_newborn_position()
-        self.world.tau.add_life(self)  # Allow the ant to be alive
+        self.world.add_life(self)  # Allow the ant to be alive
         
         self.max_pace = 100  # In game-length-units per second
 
