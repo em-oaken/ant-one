@@ -1,4 +1,6 @@
 
+import math
+
 
 class Length(float):
     """Defines a length in the World"""
@@ -25,3 +27,6 @@ class Position():
     def __repr__(self):
         return f'Position (X={self.x:.0f}, Y={self.y:.0f}, o={self.o:.2f})'
 
+    def distance_from(self, other_pos: 'Position') -> float:
+        """Returns euclidean distance"""
+        return math.sqrt((other_pos.x-self.x)**2 + (other_pos.y-self.y)**2)

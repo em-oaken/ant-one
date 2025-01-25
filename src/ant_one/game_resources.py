@@ -87,6 +87,7 @@ class Nest():
             round(radius_max*0.05),
             round(radius_max*0.10)
         )
+        self.attraction_radius = 10
     
     def give_newborn_position(self) -> Position:
         """Generates a newborn position around the nest"""
@@ -126,7 +127,7 @@ class Colony():
         self.ant_idno += 1
         idno = self.ant_idno
         position = self.nest.give_newborn_position()
-        job = Job.FORAGING
+        job = Job.JOBLESS
         return idno, position, job
 
 
@@ -153,7 +154,7 @@ class Ant():
         self.speed_factor_h = [0, 0]
 
         self.world.add_life(self)  # Allow the ant to be alive
-        logging.info(f'Ant #{self.idno} born @({self.x:.0f}, {self.y:.0f}).'
+        logging.info(f'Ant #{self.idno} born @({self.x:.0f}, {self.y:.0f}), {self.job.value}. '
                      f'Foraging threshold = {self.colony_needs_thresholds[ColonyNeed.GETFOOD]:.2f}')
     
     def live(self) -> None:
@@ -167,6 +168,28 @@ class Ant():
             self.speed_factor_h.append(speed_factor)
             self.speed_factor_h.pop(0)
             self.change_position(new_pos)
+
+        elif self.job == Job.JOBLESS:
+            new_pos, speed_factor = self.gen_random_movement()
+            new_pos_acceptable, closest_pos = self.world.validate_position(new_pos)
+            if not new_pos_acceptable:
+                new_pos = closest_pos
+                speed_factor = 0
+            
+            # If ants goes away from nest, slow her down to bring them back
+            curr_pos_dist = self.position.distance_from(self.colony.nest)
+            new_pos_dist = new_pos.distance_from(self.colony.nest)
+            if (new_pos_dist > 0.9*curr_pos_dist) and (curr_pos_dist >= self.colony.nest.attraction_radius):
+                newpos_rel_dist = new_pos_dist / self.colony.nest.attraction_radius
+                attraction_factor = newpos_rel_dist**1.5
+                new_x = (new_pos.x + self.position.x*attraction_factor)/(1+attraction_factor)
+                new_y = (new_pos.y + self.position.y*attraction_factor)/(1+attraction_factor)
+                new_o = new_pos.o + random.gauss(0, 0.5)*math.pi/6
+                new_pos = Position(new_x, new_y, new_o)
+            self.speed_factor_h.append(speed_factor)
+            self.speed_factor_h.pop(0)
+            self.change_position(new_pos)
+
     
     def gen_random_movement(self) -> Position:
         # First go straight, then turn
