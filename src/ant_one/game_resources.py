@@ -109,19 +109,33 @@ class Colony():
     def __init__(self, nest: Nest) -> None:
         self.nest = nest
         self.population = []
+        self.ant_idno = 0
+        # Needs is the base to define what job will be given to ants
+        self.needs = { need: 0 for need in ColonyNeed }
 
     def populate(self, n_ants: int) -> None:
         newborns = [Ant(self) for _ in range(n_ants)]
         self.population.extend(newborns)
     
-    def ant_birth(self):
+    def give_job(self, ant: 'Ant'):
+        if self.needs[ColonyNeed.GETFOOD] >= ant.colony_needs_thresholds[ColonyNeed.GETFOOD]:
+            return Job.FORAGING
+        return Job.JOBLESS
+    
+    def ant_birth(self) -> tuple[int, Position, 'Job']:
+        self.ant_idno += 1
+        idno = self.ant_idno
         position = self.nest.give_newborn_position()
         job = Job.FORAGING
-        return position, job
+        return idno, position, job
 
 
 class Job(Enum):
     FORAGING = 'Foraging'
+    JOBLESS = 'Jobless'
+
+class ColonyNeed(Enum):
+    GETFOOD = 'Collect food'
 
 
 class Ant():
@@ -132,12 +146,15 @@ class Ant():
         
         # Properties
         self.max_pace = 100  # In game-length-units per second
+        self.colony_needs_thresholds = { need: random.uniform(0.4, 0.6) for need in ColonyNeed }
 
         # Status
-        self.position, self.job = self.colony.ant_birth()
+        self.idno, self.position, self.job = self.colony.ant_birth()
         self.speed_factor_h = [0, 0]
 
         self.world.add_life(self)  # Allow the ant to be alive
+        logging.info(f'Ant #{self.idno} born @({self.x:.0f}, {self.y:.0f}).'
+                     f'Foraging threshold = {self.colony_needs_thresholds[ColonyNeed.GETFOOD]:.2f}')
     
     def live(self) -> None:
         """Called frequently by Tau"""
