@@ -113,6 +113,11 @@ class Colony():
     def populate(self, n_ants: int) -> None:
         newborns = [Ant(self) for _ in range(n_ants)]
         self.population.extend(newborns)
+    
+    def ant_birth(self):
+        position = self.nest.give_newborn_position()
+        mode = AntActivity.FORAGING
+        return position, mode
 
 
 class AntActivity(Enum):
@@ -124,13 +129,15 @@ class Ant():
     def __init__(self, colony: Colony) -> None:
         self.colony = colony
         self.world = self.colony.nest.world
-        self.position = self.colony.nest.give_newborn_position()
-        self.world.add_life(self)  # Allow the ant to be alive
         
+        # Properties
         self.max_pace = 100  # In game-length-units per second
 
-        self.mode = AntActivity.FORAGING
+        # Status
+        self.position, self.mode = self.colony.ant_birth()
         self.speed_factor_h = [0, 0]
+
+        self.world.add_life(self)  # Allow the ant to be alive
     
     def live(self) -> None:
         """Called frequently by Tau"""
