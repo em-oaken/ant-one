@@ -132,6 +132,17 @@ def draw_nest_entrance(
         fill.arc(x=to_px(x), y=to_px(y), radius=to_px(radius))
 
 
+def draw_food(
+        context,
+        to_px,
+        x,
+        y
+    ):
+    with context.Fill(color='blue') as fill:
+        fill.move_to(to_px(x), to_px(y))
+        fill.arc(x=to_px(x), y=to_px(y), radius=5)
+
+
 def draw_mini_ant(
         context,
         to_px,

@@ -3,9 +3,11 @@ import logging
 import math
 import random
 from enum import Enum
+from functools import partial
 
 from .tau import Tau
 from .world_physics import Length, Position
+from .drawings import draw_food
 
 
 class World():
@@ -20,10 +22,16 @@ class World():
         self.size = px_size  # e.g. 5000
         self.no_go_border = 20  # In game units
 
-        self.living_objects = []
+        self.nonliving_objects = []
+        self.living_objects = [self]
     
     def add_life(self, object):
         self.living_objects.append(object)
+    
+    def live(self):
+        add_food = random.random() * self.tau.vt_loop_duration
+        if add_food >= 0.7:
+            self.nonliving_objects.append(Food(self.gen_random_position()))
     
     def interact(self, object):
         if isinstance(object, Ant):
@@ -33,6 +41,7 @@ class World():
                 if new_job != object.job:
                     object.job = Job.FORAGING
                     logging.info(f'Ant {object.idno} has new job {object.job.value}')
+                
         else:
             logging.debug(f'Interaction with {object.__class__.__name__} not covered')
     
@@ -48,10 +57,17 @@ class World():
             Length(round(self.size[0]*0.1))
         )
     
-    def provide_newborn_position(self) -> Position:
+    def gen_random_position(self, incl_border=False) -> Position:
+        if incl_border:
+            min_x, max_x = 0, self.size[0]
+            min_y, max_y = 0, self.size[1]
+        else:
+            min_x, max_x = self.no_go_border, self.size[0]-self.no_go_border
+            min_y, max_y = self.no_go_border, self.size[1]-self.no_go_border
+            
         return Position(
-                random.randint(round(self.size[0]*0.1), int(self.size[0]*0.9)), 
-                random.randint(round(self.size[1]*0.1), int(self.size[1]*0.9))
+                random.randint(min_x, max_x), 
+                random.randint(min_y, max_y)
             )
     
     def make_position_around(self, point: Position, radius: int=0) -> Position:
@@ -259,7 +275,9 @@ class Resource():
 
 class Food(Resource):
     """Defines food"""
-    pass
+    def __init__(self, pos: Position):
+        self.pos = pos
+        self.draw = partial(draw_food, x=self.pos.x, y=self.pos.y)
 
 
 class ConstructionMaterial(Resource):
