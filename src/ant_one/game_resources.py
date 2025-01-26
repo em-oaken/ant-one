@@ -7,7 +7,7 @@ from functools import partial
 
 from .tau import Tau
 from .world_physics import Length, Position
-from .drawings import draw_food
+from .drawings import draw_nest_entrance, draw_food
 
 
 class World():
@@ -32,18 +32,6 @@ class World():
         add_food = random.random() * self.tau.vt_loop_duration
         if add_food >= 0.7:
             self.nonliving_objects.append(Food(self.gen_random_position()))
-    
-    def interact(self, object):
-        if isinstance(object, Ant):
-            if object.position.distance_from(object.colony.nest.position) < 10:
-                # logging.info(f'Ant {object.idno} near nest. Get food: {object.colony.needs[ColonyNeed.GETFOOD]:.2f}/{object.colony_needs_thresholds[ColonyNeed.GETFOOD]:.2f}')
-                new_job = object.colony.give_job(object)
-                if new_job != object.job:
-                    object.job = Job.FORAGING
-                    logging.info(f'Ant {object.idno} has new job {object.job.value}')
-                
-        else:
-            logging.debug(f'Interaction with {object.__class__.__name__} not covered')
     
     def to_px(self, x: Length) -> int:
         return round(x*self.px_size[0]/self.size[0])
@@ -108,13 +96,14 @@ class Nest():
     """Defines where the colony of Ant One lives"""
     def __init__(self, world: World) -> None:
         self.world = world
-        position, radius_max = self.world.make_nest()
-        self.position = position
+        self.position, radius_max = self.world.make_nest()
         self.radius = random.randint(
             round(radius_max*0.05),
             round(radius_max*0.10)
         )
         self.attraction_radius = 10
+        self.draw = partial(draw_nest_entrance, x=self.x, y=self.y, radius=self.radius)
+        self.world.nonliving_objects.append(self)
     
     def give_newborn_position(self) -> Position:
         """Generates a newborn position around the nest"""
@@ -236,7 +225,22 @@ class Ant():
         self.position.x = new_pos.x
         self.position.y = new_pos.y
         self.position.o = new_pos.o
-        self.world.interact(self)
+        self.react_to_position()
+    
+    def react_to_position(self):
+        for nlo in self.world.nonliving_objects:
+            if self.position.distance_from(nlo.position) < 10:
+
+                if isinstance(nlo, Nest):
+                    # logging.info(f'Ant {object.idno} near nest. Get food: {object.colony.needs[ColonyNeed.GETFOOD]:.2f}/{object.colony_needs_thresholds[ColonyNeed.GETFOOD]:.2f}')
+                    new_job = self.colony.give_job(self)
+                    if new_job != self.job:
+                        self.job = Job.FORAGING
+                        logging.info(f'Ant {self.idno} has new job {self.job.value}')
+                elif isinstance(nlo, Food):
+                    logging.info(f'Ant {self.idno} found food')
+                    self.world.nonliving_objects.remove(nlo)
+                    del nlo
 
     def gen_random_movement(self) -> Position:
         # First go straight, then turn
@@ -276,8 +280,8 @@ class Resource():
 class Food(Resource):
     """Defines food"""
     def __init__(self, pos: Position):
-        self.pos = pos
-        self.draw = partial(draw_food, x=self.pos.x, y=self.pos.y)
+        self.position = pos
+        self.draw = partial(draw_food, x=self.position.x, y=self.position.y)
 
 
 class ConstructionMaterial(Resource):
