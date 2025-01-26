@@ -28,7 +28,11 @@ class World():
     def interact(self, object):
         if isinstance(object, Ant):
             if object.position.distance_from(object.colony.nest.position) < 10:
-                logging.info(f'Ant {object.idno} near nest')
+                # logging.info(f'Ant {object.idno} near nest. Get food: {object.colony.needs[ColonyNeed.GETFOOD]:.2f}/{object.colony_needs_thresholds[ColonyNeed.GETFOOD]:.2f}')
+                new_job = object.colony.give_job(object)
+                if new_job != object.job:
+                    object.job = Job.FORAGING
+                    logging.info(f'Ant {object.idno} has new job {object.job.value}')
         else:
             logging.debug(f'Interaction with {object.__class__.__name__} not covered')
     
@@ -169,7 +173,7 @@ class Ant():
         
         # Properties
         self.max_pace = 100  # In game-length-units per second
-        self.colony_needs_thresholds = { need: random.uniform(0.4, 0.6) for need in ColonyNeed }
+        self.colony_needs_thresholds = { need: random.uniform(0.1, 0.5) for need in ColonyNeed }
 
         # Status
         self.idno, self.position, self.job = self.colony.ant_birth()

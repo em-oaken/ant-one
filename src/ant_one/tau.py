@@ -24,7 +24,7 @@ class Tau():
         # Core. rt = Real Time. vt = Virtual (game) time
         self.rt_start = datetime.datetime.now()  
         self.vtime = datetime.datetime(year=1, month=1, day=1)
-        self.time_factor = 2
+        self.time_factor = 10
         self.loopno = 0
 
     async def event_loop_manager(self):
