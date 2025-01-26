@@ -41,8 +41,9 @@ class PlayScreen(toga.Box):
             draw_mini_ant(context, self.world.to_px, ant.x, ant.y, ant.o)
         # Update top bar
         self.top_bar_infos[0].text = f'{self.tau.loopno:04}  |  {self.tau.game_duration:.2f}s'
-        self.top_bar_infos[1].text = f'{len(self.colony.population)} ants'
-        self.top_bar_infos[4].text = f'{1/self.tau.loop_duration:.0f} fps'
+        self.top_bar_infos[1].text = f'Day {self.tau.vtime:%d %H:%M:%S}'
+        self.top_bar_infos[2].text = f'{len(self.colony.population)} ants'
+        self.top_bar_infos[4].text = f'{1/self.tau.rt_loop_duration.total_seconds():.0f} fps'
 
     # Event handlers
     def on_press_canvas(self, widget, x, y):

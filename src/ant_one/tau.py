@@ -17,20 +17,30 @@ import time
 class Tau():
     def __init__(self):
         """Initiates time engine"""
-        self.start_time = datetime.datetime.now()
-        self.loopno = 0
+        # Accessors
         self.world = None
         self.render = None
 
+        # Core. rt = Real Time. vt = Virtual (game) time
+        self.rt_start = datetime.datetime.now()  
+        self.vtime = datetime.datetime(year=1, month=1, day=1)
+        self.time_factor = 2
+        self.loopno = 0
+
     async def event_loop_manager(self):
         """Manages the event loop"""
-        self.loop_starttime = datetime.datetime.now()
+        self.rt_loop_starttime = datetime.datetime.now()
         while True:
+            # Loop data
             self.loopno += 1
-            time_now = datetime.datetime.now()
-            self.loop_duration = (time_now - self.loop_starttime).total_seconds()
-            self.loop_starttime = time_now
-            self.game_duration = (time_now - self.start_time).total_seconds()
+            rt_now = datetime.datetime.now()
+            self.rt_loop_duration = rt_now - self.rt_loop_starttime
+            self.rt_loop_starttime = rt_now
+            self.game_duration = (rt_now - self.rt_start).total_seconds()
+
+            self.vt_loop_duration = self.time_factor * self.rt_loop_duration
+            self.vtime += self.vt_loop_duration
+            self.vt_loop_duration = self.vt_loop_duration.total_seconds()
 
             for obj in self.world.living_objects:
                 obj.live()

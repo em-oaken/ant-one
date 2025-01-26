@@ -25,6 +25,13 @@ class World():
     def add_life(self, object):
         self.living_objects.append(object)
     
+    def interact(self, object):
+        if isinstance(object, Ant):
+            if object.position.distance_from(object.colony.nest.position) < 10:
+                logging.info(f'Ant {object.idno} near nest')
+        else:
+            logging.debug(f'Interaction with {object.__class__.__name__} not covered')
+    
     def to_px(self, x: Length) -> int:
         return round(x*self.px_size[0]/self.size[0])
     
@@ -136,14 +143,14 @@ class Colony():
     
     def live(self):
         # Colony looses 1 food unit per minute
-        stockfood_decr = - (1/60) * self.world.tau.loop_duration
+        stockfood_decr = - (1/60) * self.world.tau.vt_loop_duration
         self.stock_food = max(0, self.stock_food + stockfood_decr)
 
         # Need to collect food increases by +0.1/min if stock of food below 5
-        needgetfood_incr = 0 if self.stock_food>=5 else (0.1/60)*self.world.tau.loop_duration
+        needgetfood_incr = 0 if self.stock_food>=5 else (0.1/60)*self.world.tau.vt_loop_duration
         self.needs[ColonyNeed.GETFOOD] = min(1, self.needs[ColonyNeed.GETFOOD]+needgetfood_incr)
 
-        logging.info(f'Colony has {self.stock_food:.2f} food with a need of {self.needs[ColonyNeed.GETFOOD]:.2f}')
+        # logging.info(f'Colony has {self.stock_food:.2f} food with a need of {self.needs[ColonyNeed.GETFOOD]:.2f}')
 
 
 class Job(Enum):
@@ -209,21 +216,21 @@ class Ant():
         self.position.x = new_pos.x
         self.position.y = new_pos.y
         self.position.o = new_pos.o
-        # TODO: Interaction with environment (nest)
+        self.world.interact(self)
 
     def gen_random_movement(self) -> Position:
         # First go straight, then turn
         new_speed_factor = random.random()
         new_speed_factor_h = self.speed_factor_h + [new_speed_factor]
         speed_factor = sum(new_speed_factor_h) / 3
-        max_distance = self.max_pace*self.world.tau.loop_duration
+        max_distance = self.max_pace*self.world.tau.vt_loop_duration
 
         move_x = -round(max_distance*speed_factor*math.cos(self.o))
         move_y = -round(max_distance*speed_factor*math.sin(self.o))
         new_x = self.x + move_x
         new_y = self.y + move_y
 
-        rotation_angle = random.gauss(sigma=6)*self.world.tau.loop_duration
+        rotation_angle = random.gauss(sigma=6)*self.world.tau.vt_loop_duration
         rotation = max(0, 1-speed_factor*2) * rotation_angle  # The more speed, the less turning
         new_o = (self.o + rotation * math.pi)
         return Position(new_x, new_y, new_o), speed_factor
